@@ -2,86 +2,292 @@
 
 🇨🇴 [Español](README.es.md)
 
-Docker-based project focused on building a **reproducible Linux Server Automation environment** for **Red Hat Enterprise Linux (RHEL)** and **Rocky Linux**.
+A reproducible **Docker-based Linux Server Automation environment** focused on **Red Hat Enterprise Linux (RHEL)** and **Rocky Linux**, built for Ansible-driven administration, Infrastructure as Code and DevOps workflows.
 
-The repository is intended to provide a portable automation workspace for Linux server administration, Infrastructure as Code and DevOps workflows, following the same containerized approach used across my Network Automation, Firewall Automation and Load Balancer Automation projects.
+This repository provides a portable automation workspace with **Ansible Core, Python, Docker SDK and Linux administration utilities**, allowing server automation tooling to run consistently without installing the complete stack directly on the host system.
 
 ---
 
 ## 🎯 Project Objective
 
-The objective of this repository is to build a reusable Docker environment for automating common Linux server administration tasks without installing the complete automation stack directly on the host system.
+The objective of this project is to provide a reusable containerized environment for Linux server administration and automation.
 
-The project is designed around:
+The environment is designed for:
 
 - Linux Server Automation
-- Reproducible Docker environments
+- Ansible-based configuration management
 - Infrastructure as Code
-- Configuration management
-- Python and Bash automation
-- Ansible-based workflows
-- Git-based version control
-- DevOps practices
+- Python automation
+- SSH-based server administration
+- Docker automation
+- Git-based workflows
 - Validation and reporting
+- DevOps practices
+- Reproducible automation environments
 
 ---
 
 ## 🐧 Target Platforms
 
-Current repository scope:
+Current project scope:
 
 | Platform | Role |
 |---|---|
-| **Red Hat Enterprise Linux (RHEL)** | Enterprise Linux server automation target |
-| **Rocky Linux** | RHEL-compatible Linux server automation target |
+| **Red Hat Enterprise Linux (RHEL)** | Enterprise Linux automation target |
+| **Rocky Linux** | RHEL-compatible Linux automation target |
 
 Additional Linux distributions may be incorporated as the project evolves.
 
 ---
 
-## 🧰 Planned Automation Stack
+## 🧱 Container Base
 
-> 🚧 The repository is currently in its initial stage. The components below describe the intended automation environment and will be added progressively.
+The current Docker image is based on:
 
-### 🤖 Ansible
+```text
+Rocky Linux 10
+```
 
-Planned for configuration management and repeatable server administration workflows such as:
+The container includes the main operating system tools required to act as a Linux automation workspace.
 
-- Package management
-- User and group administration
-- Service management
-- Filesystem configuration
-- Network configuration
-- Firewall configuration
-- SSH administration
-- System hardening
-- Patch management
-- Configuration validation
+### System packages
 
-### 🐍 Python
+```text
+python3
+python3-pip
+openssh-clients
+git
+sshpass
+iproute
+sudo
+```
 
-Planned for tasks requiring custom logic, API interaction, data processing, validation and reporting.
-
-### 🐚 Bash
-
-Planned for Linux-native administration tasks, bootstrap operations and lightweight automation inside controlled environments.
-
-### 🐳 Docker
-
-The project will package the automation toolchain inside a reusable container so the same environment can be used consistently across different hosts and labs.
+These packages provide Python execution, SSH connectivity, Git integration and basic Linux networking and administration capabilities.
 
 ---
 
-## 🚀 Planned Automation Areas
+## 🐍 Python Automation Stack
 
-The repository will progressively include automation for:
+The current `requirements.txt` installs:
+
+| Package | Purpose |
+|---|---|
+| `ansible-core>=2.16` | Core Ansible automation engine |
+| `docker>=7.0.0` | Docker SDK for Python |
+| `netaddr` | IP address and network manipulation |
+| `jmespath` | Structured data queries and filtering |
+
+The Python stack provides the foundation for server automation, data processing and integration with containerized infrastructure.
+
+---
+
+## 🤖 Ansible Collections
+
+The current `collections.yml` installs:
+
+```text
+community.docker
+ansible.posix
+community.general
+ansible.utils
+```
+
+### `community.docker`
+
+Provides modules and plugins for managing Docker containers, images, networks and related resources.
+
+### `ansible.posix`
+
+Provides Linux and POSIX-oriented modules and plugins for system administration.
+
+### `community.general`
+
+Extends Ansible with additional modules useful across Linux infrastructure and automation workflows.
+
+### `ansible.utils`
+
+Provides utilities, filters and plugins commonly used for structured data processing and infrastructure automation.
+
+---
+
+## 👤 Non-root Execution
+
+The Docker image creates a dedicated automation user:
+
+```text
+adminserver
+```
+
+The user is configured with:
+
+```text
+HOME: /home/adminserver
+SHELL: /bin/bash
+WORKDIR: /ansible
+```
+
+The container switches from `root` to `adminserver` before execution.
+
+The user currently has passwordless sudo privileges:
+
+```text
+adminserver ALL=(ALL) NOPASSWD:ALL
+```
+
+This allows administrative tasks to be executed through `sudo` while keeping the default container session under a non-root user.
+
+> Passwordless sudo is convenient for controlled automation and laboratory environments. Production use should follow the security policy and least-privilege requirements of the target environment.
+
+---
+
+## 📂 Working Directory
+
+The automation workspace inside the container is:
+
+```text
+/ansible
+```
+
+This directory is owned by `adminserver` and is intended to contain inventories, playbooks, roles and automation files mounted or added to the container.
+
+---
+
+## 🗂️ Current Repository Structure
+
+```text
+docker_servers_automation/
+│
+├── Dockerfile
+├── requirements.txt
+├── collections.yml
+├── LICENSE
+├── README.md
+└── README.es.md
+```
+
+### `Dockerfile`
+
+Builds the Rocky Linux 10 automation environment, installs system packages, Python dependencies and Ansible collections, and configures the `adminserver` non-root user.
+
+### `requirements.txt`
+
+Defines the Python automation dependencies installed inside the image.
+
+### `collections.yml`
+
+Defines the Ansible collections installed during the Docker build.
+
+---
+
+## ⚡ Build the Image
+
+From the repository root:
+
+```bash
+docker build -t docker_servers_automation .
+```
+
+Command explanation:
+
+- `docker build` — builds a Docker image.
+- `-t docker_servers_automation` — assigns the image name.
+- `.` — uses the current directory as the Docker build context.
+
+---
+
+## 🚀 Run the Container
+
+Run an interactive container:
+
+```bash
+docker run --rm -it docker_servers_automation
+```
+
+Options:
+
+- `--rm` — removes the container when it exits.
+- `-it` — allocates an interactive terminal.
+
+Because the Dockerfile defines:
+
+```dockerfile
+CMD ["/bin/bash"]
+```
+
+the container starts directly in a Bash shell as the `adminserver` user.
+
+---
+
+## 📁 Mount an Automation Workspace
+
+A local project directory can be mounted into `/ansible`:
+
+```bash
+docker run --rm -it \
+  -v "$PWD:/ansible" \
+  docker_servers_automation
+```
+
+This allows playbooks, inventories, scripts and other automation files from the host to be used directly inside the container.
+
+---
+
+## ✅ Validate the Environment
+
+After building the image:
+
+```bash
+ansible --version
+```
+
+Verify installed collections:
+
+```bash
+ansible-galaxy collection list
+```
+
+Verify Python dependencies:
+
+```bash
+python3 -m pip show ansible-core docker netaddr jmespath
+```
+
+Check the current user:
+
+```bash
+whoami
+```
+
+Expected result:
+
+```text
+adminserver
+```
+
+Validate sudo access:
+
+```bash
+sudo whoami
+```
+
+Expected result:
+
+```text
+root
+```
+
+---
+
+## 🚀 Automation Scope
+
+The environment is intended to progressively support Linux server automation workflows such as:
 
 - Operating system information collection
 - Package installation and updates
 - User and group management
-- SSH configuration
+- SSH administration
 - Service management
-- Filesystem and storage checks
+- Filesystem and storage administration
 - Network configuration
 - Firewall management
 - System hardening
@@ -89,28 +295,31 @@ The repository will progressively include automation for:
 - Patch management
 - Configuration backups
 - Health checks
-- CPU, memory and disk utilization checks
+- CPU, memory and disk monitoring
 - Log collection
 - Configuration validation
 - Inventory and reporting
 - Pre-check and post-check workflows
 - Automated remediation
 - Multi-server operations
+- Docker administration
 - CI/CD integration
 
 ---
 
-## ⚙️ Planned Architecture
+## ⚙️ Automation Architecture
 
 ```text
 Git Repository
       │
       ▼
-Docker Image
+Docker Automation Environment
       │
-      ├── Ansible
-      ├── Python
-      ├── Bash
+      ├── Ansible Core
+      ├── Python 3
+      ├── Docker SDK
+      ├── Ansible Collections
+      ├── SSH Client
       └── Linux Utilities
       │
       ▼
@@ -120,54 +329,16 @@ Linux Servers
       └── Rocky Linux
       │
       ▼
-Validation / Reporting
+Validation / Reporting / Remediation
 ```
 
-The goal is to keep the automation code, dependencies and execution environment reproducible and version controlled.
-
----
-
-## 🗂️ Current Repository Structure
-
-```text
-docker_servers_automation/
-│
-├── LICENSE
-├── README.md
-└── README.es.md
-```
-
-The repository is currently at the documentation and project-definition stage. Docker, Python, Ansible and automation files will be added progressively as the implementation begins.
-
----
-
-## 🗂️ Planned Repository Structure
-
-```text
-docker_servers_automation/
-│
-├── Dockerfile
-├── requirements.txt
-├── collections.yml
-├── ansible/
-│   ├── inventories/
-│   ├── playbooks/
-│   └── roles/
-├── python/
-├── bash/
-├── docs/
-├── README.md
-├── README.es.md
-└── LICENSE
-```
-
-The final structure may evolve according to the automation workflows implemented in the project.
+The goal is to keep the automation environment, dependencies and workflows reproducible and version controlled.
 
 ---
 
 ## 🔄 DevOps / Infrastructure Automation Approach
 
-The long-term workflow is intended to follow a repeatable model:
+The project is designed around a repeatable workflow:
 
 ```text
 Git
@@ -188,13 +359,13 @@ Post-check
 Reporting / Remediation
 ```
 
-This approach helps keep server administration changes version controlled, repeatable and auditable.
+This approach helps make server administration workflows consistent, repeatable and auditable.
 
 ---
 
 ## 🧪 Lab First
 
-Automation developed in this repository should first be validated in laboratory or controlled environments before being adapted to production servers.
+Automation developed with this image should first be validated in laboratory or controlled environments before being adapted to production infrastructure.
 
 ---
 
@@ -204,6 +375,7 @@ Automation developed in this repository should first be validated in laboratory 
 - Do not commit credentials to Git.
 - Prefer SSH keys, secret stores or automation-platform credentials.
 - Apply least-privilege access whenever possible.
+- Review passwordless sudo before production usage.
 - Validate automation before production deployment.
 - Keep dependencies and automation code version controlled.
 
@@ -220,29 +392,36 @@ Automation developed in this repository should first be validated in laboratory 
 
 ## 🗺️ Roadmap
 
-- Build the initial Docker image
-- Define the Python dependencies
-- Add Ansible Core and required collections
+The base Docker automation environment is now implemented.
+
+Future work may include:
+
+- Add example Ansible inventories
+- Add reusable Ansible roles
 - Add RHEL automation examples
 - Add Rocky Linux automation examples
 - Add Bash administration utilities
-- Add reusable Ansible roles
-- Add inventory examples
+- Add Python automation scripts
 - Add pre-check and post-check workflows
 - Add system health reporting
-- Add automated validation
-- Add CI/CD checks
+- Add automated remediation
 - Add container smoke tests
+- Add CI/CD validation
+- Add versioned Docker image publishing
 
 ---
 
 ## 📊 Repository Status
 
-> 🚧 **Initial Development / Work in Progress**
+> 🚧 **Base Automation Environment Implemented / Continuous Development**
 
-Current defined scope:
+Current implemented foundation:
 
-**Docker | Linux Server Automation | RHEL | Rocky Linux | Infrastructure as Code | DevOps**
+**Rocky Linux 10 | Ansible Core | Python 3 | Docker SDK | SSH | Linux Automation**
+
+Target platforms:
+
+**RHEL | Rocky Linux**
 
 ---
 
@@ -254,7 +433,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 **Anderson Martinez Virviescas**
 
-Network Administrator | Network Automation | NetDevOps | Linux | Infrastructure Automation | Cybersecurity
+Network Administrator | Firewall Administrator | Network Automation | NetDevOps | Linux | Infrastructure Automation
 
 GitHub: [@andersonmavi30](https://github.com/andersonmavi30)
 
