@@ -1,4 +1,4 @@
-FROM rockylinux:10
+FROM rockylinux/rockylinux:10 
 
 # 1. Paquetes de sistema (agregamos sudo)
 RUN dnf install -y \
