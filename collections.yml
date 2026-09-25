@@ -1,4 +1,8 @@
-community.docker
-ansible.posix
-community.general
-ansible.utils
+---
+collections:
+  - name: community.docker
+    version: ">=4.3.0"
+  - name: ansible.posix
+    version: ">=1.5.0"
+  - name: community.general
+  - name: ansible.utils
