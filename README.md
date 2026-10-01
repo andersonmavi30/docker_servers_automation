@@ -85,12 +85,17 @@ The Python stack provides the foundation for server automation, data processing 
 
 The current `collections.yml` installs:
 
-```text
-community.docker
-ansible.posix
-community.general
-ansible.utils
+```yaml
+collections:
+  - name: community.docker
+    version: ">=4.3.0"
+  - name: ansible.posix
+    version: ">=1.5.0"
+  - name: community.general
+  - name: ansible.utils
 ```
+
+The project now pins minimum versions for `community.docker` and `ansible.posix` to keep the container build compatible with the automation features used by the image.
 
 ### `community.docker`
 
